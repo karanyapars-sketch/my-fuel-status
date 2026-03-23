@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>Real-time Fuel Status</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;500;700&display=swap');
+        body { font-family: 'Kanit', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="max-w-6xl mx-auto p-6">
+        <div class="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-2xl shadow-sm mb-6">
+            <div>
+                <h1 class="text-3xl font-extrabold text-gray-800">รายงานปริมาณน้ำมัน Real-time</h1>
+                <p id="updateTime" class="text-gray-500 text-sm mt-1">รอการอัปเดต...</p>
+            </div>
+            <div id="pumpBadge" class="mt-4 md:mt-0 px-8 py-3 rounded-full font-bold text-white shadow-lg text-lg">
+                ตรวจสอบสถานะ...
+            </div>
+        </div>
+
+        <div id="displayArea" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            </div>
+    </div>
+
+    <script>
+        function updateDashboard() {
+            const raw = localStorage.getItem('fuelReportData');
+            if (!raw) return;
+            const data = JSON.parse(raw);
+
+            document.getElementById('updateTime').innerText = "ข้อมูลล่าสุดเมื่อ: " + data.lastUpdate;
+            const badge = document.getElementById('pumpBadge');
+            badge.innerText = data.status === 'open' ? "● เปิดให้บริการ" : "● ปิดให้บริการ";
+            badge.className = `px-8 py-3 rounded-full font-bold text-white shadow-lg text-lg ${data.status === 'open' ? 'bg-green-500' : 'bg-red-600'}`;
+
+            const fuelTypes = [
+                { name: "ดีเซล (Diesel)", val: data.diesel, color: "blue" },
+                { name: "เบนซิน 91 (G91)", val: data.b91, color: "green" },
+                { name: "เบนซิน 95 (G95)", val: data.b95, color: "orange" }
+            ];
+
+            const display = document.getElementById('displayArea');
+            display.innerHTML = '';
+
+            fuelTypes.forEach(f => {
+                const total = f.val.prev + f.val.rec;
+                const remain = total - f.val.sold;
+                const percent = (remain / total) * 100 || 0;
+
+                let barColor = "bg-green-500";
+                let statusMsg = "ปกติ";
+                if (remain <= 0) { barColor = "bg-red-600"; statusMsg = "น้ำมันหมด"; }
+                else if (percent < 20) { barColor = "bg-yellow-500"; statusMsg = "ใกล้หมด"; }
+
+                display.innerHTML += `
+                    <div class="bg-white rounded-3xl shadow-xl border-t-8 border-${f.color}-500 p-6 transition-all hover:scale-105">
+                        <h2 class="text-xl font-bold text-gray-700 mb-4">${f.name}</h2>
+                        <div class="space-y-3 mb-6">
+                            <div class="flex justify-between text-sm text-gray-500 italic">
+                                <span>ยกยอดมา:</span>
+                                <span>${f.val.prev.toLocaleString()} ลิตร</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-green-600">รับเพิ่ม (+) :</span>
+                                <span class="font-bold text-green-700">${f.val.rec.toLocaleString()}</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-red-500">จำหน่าย (-) :</span>
+                                <span class="font-bold text-red-600">${f.val.sold.toLocaleString()}</span>
+                            </div>
+                            <div class="border-t pt-2 flex justify-between items-center">
+                                <span class="font-bold text-gray-800">คงเหลือสุทธิ:</span>
+                                <span class="text-2xl font-black text-blue-600">${remain.toLocaleString()}</span>
+                            </div>
+                        </div>
+
+                        <div class="w-full bg-gray-100 rounded-full h-3 mb-4">
+                            <div class="${barColor} h-3 rounded-full" style="width: ${percent}%"></div>
+                        </div>
+                        <div class="${barColor} text-white text-center py-2 rounded-xl text-sm font-bold shadow-inner">
+                            ${statusMsg}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        setInterval(updateDashboard, 1000);
+        updateDashboard();
+    </script>
+</body>
+</html>

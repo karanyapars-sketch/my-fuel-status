@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>Jobber Admin - บันทึกยอดน้ำมันรายวัน</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 p-4 text-slate-100">
+    <div class="max-w-xl mx-auto bg-slate-800 p-8 rounded-3xl shadow-2xl border border-slate-700">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-yellow-400">แผงควบคุม Jobber</h2>
+            <div id="currentDate" class="text-sm bg-slate-700 px-3 py-1 rounded-full text-slate-300"></div>
+        </div>
+
+        <div class="mb-8 p-4 bg-slate-700 rounded-xl">
+            <label class="block mb-2 font-semibold">สถานะปั๊ม:</label>
+            <select id="pumpStatus" class="w-full p-3 rounded-lg bg-slate-600 border-none text-white focus:ring-2 focus:ring-yellow-500">
+                <option value="open">🟢 เปิดให้บริการปกติ</option>
+                <option value="closed">🔴 ปิดให้บริการ / ปิดปรับปรุง</option>
+            </select>
+        </div>
+
+        <div id="fuelInputs" class="space-y-6">
+            <div class="p-4 bg-slate-700/50 rounded-xl border-l-4 border-blue-500">
+                <h3 class="font-bold text-blue-400 mb-3 text-lg">ดีเซล (Diesel)</h3>
+                <div class="grid grid-cols-1 gap-3">
+                    <input type="number" id="d_prev" class="w-full p-2 rounded bg-slate-800 border border-slate-600" placeholder="ยอดยกมา (เมื่อวาน)">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="d_rec" class="p-2 rounded bg-slate-800 border border-slate-600 text-green-400" placeholder="รับเพิ่ม (+)">
+                        <input type="number" id="d_sold" class="p-2 rounded bg-slate-800 border border-slate-600 text-red-400" placeholder="จำหน่าย (-)">
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 bg-slate-700/50 rounded-xl border-l-4 border-green-500">
+                <h3 class="font-bold text-green-400 mb-3 text-lg">เบนซิน 91 (Gasoline 91)</h3>
+                <div class="grid grid-cols-1 gap-3">
+                    <input type="number" id="b91_prev" class="w-full p-2 rounded bg-slate-800 border border-slate-600" placeholder="ยอดยกมา (เมื่อวาน)">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="b91_rec" class="p-2 rounded bg-slate-800 border border-slate-600 text-green-400" placeholder="รับเพิ่ม (+)">
+                        <input type="number" id="b91_sold" class="p-2 rounded bg-slate-800 border border-slate-600 text-red-400" placeholder="จำหน่าย (-)">
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 bg-slate-700/50 rounded-xl border-l-4 border-orange-500">
+                <h3 class="font-bold text-orange-400 mb-3 text-lg">เบนซิน 95 (Gasoline 95)</h3>
+                <div class="grid grid-cols-1 gap-3">
+                    <input type="number" id="b95_prev" class="w-full p-2 rounded bg-slate-800 border border-slate-600" placeholder="ยอดยกมา (เมื่อวาน)">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="b95_rec" class="p-2 rounded bg-slate-800 border border-slate-600 text-green-400" placeholder="รับเพิ่ม (+)">
+                        <input type="number" id="b95_sold" class="p-2 rounded bg-slate-800 border border-slate-600 text-red-400" placeholder="จำหน่าย (-)">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button onclick="saveToCloud()" class="w-full mt-8 bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-black py-4 rounded-xl shadow-lg transition-all text-lg">
+            อัปเดตข้อมูล Real-time
+        </button>
+        <p id="msg" class="text-center mt-4 text-green-400 font-bold opacity-0">✅ บันทึกข้อมูลสำเร็จ!</p>
+    </div>
+
+    <script>
+        document.getElementById('currentDate').innerText = "วันที่: " + new Date().toLocaleDateString('th-TH');
+
+        function saveToCloud() {
+            const data = {
+                status: document.getElementById('pumpStatus').value,
+                lastUpdate: new Date().toLocaleString('th-TH'),
+                diesel: {
+                    prev: Number(document.getElementById('d_prev').value) || 0,
+                    rec: Number(document.getElementById('d_rec').value) || 0,
+                    sold: Number(document.getElementById('d_sold').value) || 0
+                },
+                b91: {
+                    prev: Number(document.getElementById('b91_prev').value) || 0,
+                    rec: Number(document.getElementById('b91_rec').value) || 0,
+                    sold: Number(document.getElementById('b91_sold').value) || 0
+                },
+                b95: {
+                    prev: Number(document.getElementById('b95_prev').value) || 0,
+                    rec: Number(document.getElementById('b95_rec').value) || 0,
+                    sold: Number(document.getElementById('b95_sold').value) || 0
+                }
+            };
+            localStorage.setItem('fuelReportData', JSON.stringify(data));
+            const msg = document.getElementById('msg');
+            msg.style.opacity = '1';
+            setTimeout(() => { msg.style.opacity = '0'; }, 2000);
+        }
+    </script>
+</body>
+</html>
