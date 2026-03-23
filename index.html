@@ -2,85 +2,108 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>Real-time Fuel Status</title>
+    <title>Dashboard - ปตท.บ้านแฮด</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;500;700&display=swap');
-        body { font-family: 'Kanit', sans-serif; }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Kanit', sans-serif; }</style>
 </head>
-<body class="bg-gray-100 min-h-screen">
-    <div class="max-w-6xl mx-auto p-6">
-        <div class="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-2xl shadow-sm mb-6">
-            <div>
-                <h1 class="text-3xl font-extrabold text-gray-800">รายงานปริมาณน้ำมัน ปตท.บ้านแฮด Real-time</h1>
-                <p id="updateTime" class="text-gray-500 text-sm mt-1">รอการอัปเดต...</p>
-            </div>
-            <div id="pumpBadge" class="mt-4 md:mt-0 px-8 py-3 rounded-full font-bold text-white shadow-lg text-lg">
-                ตรวจสอบสถานะ...
-            </div>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
+    
+    <div class="max-w-xl w-full">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-black text-blue-900 mb-2">ปตท.บ้านแฮด</h1>
+            <p id="time" class="text-gray-500 italic">กำลังดึงข้อมูล...</p>
         </div>
 
-        <div id="displayArea" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white rounded-[2rem] shadow-2xl p-8 border-b-8 border-blue-600">
+            <div class="flex justify-between items-center mb-6">
+                <span class="text-gray-600 font-bold text-lg">ปริมาณน้ำมันรวมคงเหลือ</span>
+                <div id="statusBadge" class="px-4 py-1 rounded-full text-white text-sm font-bold shadow-sm">--</div>
             </div>
+
+            <div class="text-center mb-8">
+                <span id="remain" class="text-7xl font-black text-blue-600">0</span>
+                <span class="text-2xl font-bold text-gray-400 ml-2">ลิตร</span>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 text-center mb-8">
+                <div class="bg-gray-50 p-3 rounded-2xl">
+                    <p class="text-xs text-gray-400 mb-1">ยกมา</p>
+                    <p id="prevDisplay" class="font-bold text-gray-700">0</p>
+                </div>
+                <div class="bg-green-50 p-3 rounded-2xl">
+                    <p class="text-xs text-green-500 mb-1">รับเพิ่ม</p>
+                    <p id="recDisplay" class="font-bold text-green-700">0</p>
+                </div>
+                <div class="bg-red-50 p-3 rounded-2xl">
+                    <p class="text-xs text-red-400 mb-1">จำหน่าย</p>
+                    <p id="soldDisplay" class="font-bold text-red-700">0</p>
+                </div>
+            </div>
+
+            <div class="w-full bg-gray-100 rounded-full h-6 mb-4 overflow-hidden shadow-inner">
+                <div id="bar" class="h-full bg-green-500 transition-all duration-1000 shadow-lg" style="width: 0%"></div>
+            </div>
+            
+            <p id="statusText" class="text-center font-bold text-gray-400 uppercase tracking-widest text-sm">ตรวจสอบสถานะ...</p>
+        </div>
+
+        <a href="admin.html" class="block text-center mt-10 text-gray-400 hover:text-blue-600 transition text-sm">⚙️ จัดการข้อมูล (Jobber Only)</a>
     </div>
 
-<script>
-    const FIREBASE_URL = "https://ptt-ban-had-default-rtdb.asia-southeast1.firebasedatabase.app/fuel_data.json";
+    <script>
+        // *** วาง URL ของ Firebase เดียวกับหน้า Admin ***
+        const FIREBASE_URL = "https://ptt-ban-had-default-rtdb.asia-southeast1.firebasedatabase.app/total_fuel.json";
 
-    function updateDashboard() {
-        fetch(FIREBASE_URL)
-            .then(response => response.json())
-            .then(data => {
-                if (!data) return; // ถ้ายังไม่มีข้อมูลให้ข้ามไปก่อน
+        function updateView() {
+            fetch(FIREBASE_URL)
+                .then(res => res.json())
+                .then(data => {
+                    if (!data) return;
 
-                // อัปเดตเวลาและสถานะปั๊ม
-                document.getElementById('updateTime').innerText = "ข้อมูลล่าสุดเมื่อ: " + data.lastUpdate;
-                const badge = document.getElementById('pumpBadge');
-                badge.innerText = data.status === 'open' ? "● เปิดให้บริการ" : "● ปิดให้บริการ";
-                badge.className = `px-8 py-3 rounded-full font-bold text-white shadow-lg text-lg ${data.status === 'open' ? 'bg-green-500' : 'bg-red-600'}`;
+                    const totalStock = data.prev + data.rec;
+                    const remain = totalStock - data.sold;
+                    const percent = Math.min((remain / totalStock) * 100, 100) || 0;
 
-                // ข้อมูลน้ำมัน 3 ชนิด
-                const fuelTypes = [
-                    { name: "ดีเซล (Diesel)", val: data.diesel, color: "blue" },
-                    { name: "เบนซิน 91 (G91)", val: data.b91, color: "green" },
-                    { name: "เบนซิน 95 (G95)", val: data.b95, color: "orange" }
-                ];
+                    // อัปเดตตัวเลข
+                    document.getElementById('remain').innerText = remain.toLocaleString();
+                    document.getElementById('prevDisplay').innerText = data.prev.toLocaleString();
+                    document.getElementById('recDisplay').innerText = "+" + data.rec.toLocaleString();
+                    document.getElementById('soldDisplay').innerText = "-" + data.sold.toLocaleString();
+                    document.getElementById('time').innerText = "อัปเดตล่าสุด: " + data.lastUpdate;
 
-                const display = document.getElementById('displayArea');
-                display.innerHTML = '';
+                    // อัปเดตสีและบาร์
+                    const bar = document.getElementById('bar');
+                    const badge = document.getElementById('statusBadge');
+                    const statusT = document.getElementById('statusText');
 
-                fuelTypes.forEach(f => {
-                    const total = f.val.prev + f.val.rec;
-                    const remain = total - f.val.sold;
-                    const percent = (remain / total) * 100 || 0;
-
-                    let barColor = "bg-green-500";
-                    if (remain <= 0) barColor = "bg-red-600";
-                    else if (percent < 20) barColor = "bg-yellow-500";
-
-                    display.innerHTML += `
-                        <div class="bg-white rounded-3xl shadow-xl border-t-8 border-${f.color}-500 p-6">
-                            <h2 class="text-xl font-bold text-gray-700 mb-4">${f.name}</h2>
-                            <div class="flex justify-between items-center mb-4">
-                                <span class="font-bold text-gray-800 italic text-sm">คงเหลือสุทธิ:</span>
-                                <span class="text-3xl font-black text-blue-600">${remain.toLocaleString()}</span>
-                            </div>
-                            <div class="w-full bg-gray-100 rounded-full h-3 mb-4">
-                                <div class="${barColor} h-3 rounded-full transition-all duration-1000" style="width: ${percent}%"></div>
-                            </div>
-                            <div class="${barColor} text-white text-center py-1 rounded-xl text-xs font-bold uppercase shadow-sm">
-                                ${remain <= 0 ? 'น้ำมันหมด' : 'พร้อมบริการ'}
-                            </div>
-                        </div>
-                    `;
+                    // ตรรกะเช็คสถานะ
+                    if (data.status === 'closed') {
+                        badge.innerText = "CLOSED";
+                        badge.className = "px-4 py-1 rounded-full text-white text-sm font-bold shadow-sm bg-gray-500";
+                        statusT.innerText = "ปิดให้บริการ";
+                        bar.className = "h-full bg-gray-400 transition-all duration-1000";
+                    } else {
+                        badge.innerText = "OPEN";
+                        badge.className = "px-4 py-1 rounded-full text-white text-sm font-bold shadow-sm bg-green-500";
+                        
+                        if (remain <= 0) {
+                            bar.className = "h-full bg-red-600 animate-pulse";
+                            statusT.innerText = "น้ำมันหมด - ไม่พร้อมบริการ";
+                        } else if (percent < 20) {
+                            bar.className = "h-full bg-yellow-500";
+                            statusT.innerText = "น้ำมันใกล้หมด (โปรดเตรียมสำรอง)";
+                        } else {
+                            bar.className = "h-full bg-green-500";
+                            statusT.innerText = "พร้อมให้บริการปกติ";
+                        }
+                    }
+                    bar.style.width = percent + "%";
                 });
-            });
-    }
+        }
 
-    // อัปเดตอัตโนมัติทุก 3 วินาที
-    setInterval(updateDashboard, 3000);
-    updateDashboard();
-</script>
+        setInterval(updateView, 3000);
+        updateView();
+    </script>
 </body>
 </html>
