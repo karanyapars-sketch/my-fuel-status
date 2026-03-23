@@ -61,34 +61,41 @@
         <p id="msg" class="text-center mt-4 text-green-400 font-bold opacity-0">✅ บันทึกข้อมูลสำเร็จ!</p>
     </div>
 
-    <script>
-        document.getElementById('currentDate').innerText = "วันที่: " + new Date().toLocaleDateString('th-TH');
+<script>
+    // เปลี่ยน URL ด้านล่างนี้เป็นของโครงการที่คุณสร้างในข้อ 2 (ต้องเติม /fuel_data.json ต่อท้ายด้วย)
+    const FIREBASE_URL = "https://ptt-ban-had-default-rtdb.asia-southeast1.firebasedatabase.app/fuel_data.json";
 
-        function saveToCloud() {
-            const data = {
-                status: document.getElementById('pumpStatus').value,
-                lastUpdate: new Date().toLocaleString('th-TH'),
-                diesel: {
-                    prev: Number(document.getElementById('d_prev').value) || 0,
-                    rec: Number(document.getElementById('d_rec').value) || 0,
-                    sold: Number(document.getElementById('d_sold').value) || 0
-                },
-                b91: {
-                    prev: Number(document.getElementById('b91_prev').value) || 0,
-                    rec: Number(document.getElementById('b91_rec').value) || 0,
-                    sold: Number(document.getElementById('b91_sold').value) || 0
-                },
-                b95: {
-                    prev: Number(document.getElementById('b95_prev').value) || 0,
-                    rec: Number(document.getElementById('b95_rec').value) || 0,
-                    sold: Number(document.getElementById('b95_sold').value) || 0
-                }
-            };
-            localStorage.setItem('fuelReportData', JSON.stringify(data));
+    function saveToCloud() {
+        const data = {
+            status: document.getElementById('pumpStatus').value,
+            lastUpdate: new Date().toLocaleString('th-TH'),
+            diesel: {
+                prev: Number(document.getElementById('d_prev').value) || 0,
+                rec: Number(document.getElementById('d_rec').value) || 0,
+                sold: Number(document.getElementById('d_sold').value) || 0
+            },
+            b91: {
+                prev: Number(document.getElementById('b91_prev').value) || 0,
+                rec: Number(document.getElementById('b91_rec').value) || 0,
+                sold: Number(document.getElementById('b91_sold').value) || 0
+            },
+            b95: {
+                prev: Number(document.getElementById('b95_prev').value) || 0,
+                rec: Number(document.getElementById('b95_rec').value) || 0,
+                sold: Number(document.getElementById('b95_sold').value) || 0
+            }
+        };
+
+        // ส่งข้อมูลไป Cloud
+        fetch(FIREBASE_URL, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        }).then(() => {
             const msg = document.getElementById('msg');
             msg.style.opacity = '1';
             setTimeout(() => { msg.style.opacity = '0'; }, 2000);
-        }
-    </script>
+        });
+    }
+</script>
 </body>
 </html>
