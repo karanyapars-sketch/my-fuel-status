@@ -7,98 +7,73 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;700;900&display=swap" rel="stylesheet">
     <style>body { font-family: 'Kanit', sans-serif; }</style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
-    
-    <div class="max-w-xl w-full">
-        <div class="text-center mb-8">
-            <h1 class="text-4xl font-black text-blue-900 mb-2">ปตท.บ้านแฮด</h1>
-            <p id="time" class="text-gray-500 italic">กำลังดึงข้อมูล...</p>
-        </div>
+<body class="bg-gray-50 min-h-screen p-4">
+    <div class="max-w-4xl mx-auto">
+        <header class="text-center my-8">
+            <h1 class="text-4xl font-black text-blue-900">ปตท.บ้านแฮด</h1>
+            <p id="time" class="text-gray-500 mt-2 italic text-sm">กำลังโหลดข้อมูล...</p>
+        </header>
 
-        <div class="bg-white rounded-[2rem] shadow-2xl p-8 border-b-8 border-blue-600">
-            <div class="flex justify-between items-center mb-6">
-                <span class="text-gray-600 font-bold text-lg">ปริมาณน้ำมันรวมคงเหลือ</span>
-                <div id="statusBadge" class="px-4 py-1 rounded-full text-white text-sm font-bold shadow-sm">--</div>
+        <div id="displayArea" class="grid grid-cols-1 md:grid-cols-3 gap-6">
             </div>
 
-            <div class="text-center mb-8">
-                <span id="remain" class="text-7xl font-black text-blue-600">0</span>
-                <span class="text-2xl font-bold text-gray-400 ml-2">ลิตร</span>
-            </div>
-
-            <div class="grid grid-cols-3 gap-2 text-center mb-8">
-                <div class="bg-gray-50 p-3 rounded-2xl">
-                    <p class="text-xs text-gray-400 mb-1">ยกมา</p>
-                    <p id="prevDisplay" class="font-bold text-gray-700">0</p>
-                </div>
-                <div class="bg-green-50 p-3 rounded-2xl">
-                    <p class="text-xs text-green-500 mb-1">รับเพิ่ม</p>
-                    <p id="recDisplay" class="font-bold text-green-700">0</p>
-                </div>
-                <div class="bg-red-50 p-3 rounded-2xl">
-                    <p class="text-xs text-red-400 mb-1">จำหน่าย</p>
-                    <p id="soldDisplay" class="font-bold text-red-700">0</p>
-                </div>
-            </div>
-
-            <div class="w-full bg-gray-100 rounded-full h-6 mb-4 overflow-hidden shadow-inner">
-                <div id="bar" class="h-full bg-green-500 transition-all duration-1000 shadow-lg" style="width: 0%"></div>
-            </div>
-            
-            <p id="statusText" class="text-center font-bold text-gray-400 uppercase tracking-widest text-sm">ตรวจสอบสถานะ...</p>
-        </div>
-
-        <a href="admin.html" class="block text-center mt-10 text-gray-400 hover:text-blue-600 transition text-sm">⚙️ จัดการข้อมูล (Jobber Only)</a>
+        <footer class="mt-12 text-center">
+            <a href="admin.html" class="text-gray-400 hover:text-blue-600 text-sm">⚙️ ส่วนสำหรับ Jobber บันทึกข้อมูล</a>
+        </footer>
     </div>
 
     <script>
-        // *** วาง URL ของ Firebase เดียวกับหน้า Admin ***
-        const FIREBASE_URL = "https://ptt-ban-had-default-rtdb.asia-southeast1.firebasedatabase.app/total_fuel.json";
+        const FIREBASE_URL = "https://ptt-ban-had-default-rtdb.asia-southeast1.firebasedatabase.app/fuel_report.json";
 
         function updateView() {
             fetch(FIREBASE_URL)
                 .then(res => res.json())
                 .then(data => {
                     if (!data) return;
-
-                    const totalStock = data.prev + data.rec;
-                    const remain = totalStock - data.sold;
-                    const percent = Math.min((remain / totalStock) * 100, 100) || 0;
-
-                    // อัปเดตตัวเลข
-                    document.getElementById('remain').innerText = remain.toLocaleString();
-                    document.getElementById('prevDisplay').innerText = data.prev.toLocaleString();
-                    document.getElementById('recDisplay').innerText = "+" + data.rec.toLocaleString();
-                    document.getElementById('soldDisplay').innerText = "-" + data.sold.toLocaleString();
                     document.getElementById('time').innerText = "อัปเดตล่าสุด: " + data.lastUpdate;
+                    
+                    const fuels = [
+                        { name: "แก๊สโซฮอล์ 95", val: data.g95, color: "orange" },
+                        { name: "แก๊สโซฮอล์ 91", val: data.g91, color: "green" },
+                        { name: "ดีเซล", val: data.d, color: "blue" }
+                    ];
 
-                    // อัปเดตสีและบาร์
-                    const bar = document.getElementById('bar');
-                    const badge = document.getElementById('statusBadge');
-                    const statusT = document.getElementById('statusText');
+                    const display = document.getElementById('displayArea');
+                    display.innerHTML = '';
 
-                    // ตรรกะเช็คสถานะ
-                    if (data.status === 'closed') {
-                        badge.innerText = "CLOSED";
-                        badge.className = "px-4 py-1 rounded-full text-white text-sm font-bold shadow-sm bg-gray-500";
-                        statusT.innerText = "ปิดให้บริการ";
-                        bar.className = "h-full bg-gray-400 transition-all duration-1000";
-                    } else {
-                        badge.innerText = "OPEN";
-                        badge.className = "px-4 py-1 rounded-full text-white text-sm font-bold shadow-sm bg-green-500";
+                    fuels.forEach(f => {
+                        const total = f.val.prev + f.val.rec;
+                        const remain = total - f.val.sold;
+                        const percent = (remain / total) * 100 || 0;
                         
-                        if (remain <= 0) {
-                            bar.className = "h-full bg-red-600 animate-pulse";
-                            statusT.innerText = "น้ำมันหมด - ไม่พร้อมบริการ";
-                        } else if (percent < 20) {
-                            bar.className = "h-full bg-yellow-500";
-                            statusT.innerText = "น้ำมันใกล้หมด (โปรดเตรียมสำรอง)";
-                        } else {
-                            bar.className = "h-full bg-green-500";
-                            statusT.innerText = "พร้อมให้บริการปกติ";
-                        }
-                    }
-                    bar.style.width = percent + "%";
+                        let barColor = "bg-green-500";
+                        let statusText = "พร้อมให้บริการ";
+                        if (remain <= 0) { barColor = "bg-red-600"; statusText = "น้ำมันหมด"; }
+                        else if (percent < 20) { barColor = "bg-yellow-500"; statusText = "น้ำมันใกล้หมด"; }
+
+                        display.innerHTML += `
+                            <div class="bg-white rounded-3xl shadow-xl border-t-8 border-${f.color}-500 overflow-hidden">
+                                <div class="p-6">
+                                    <h3 class="text-lg font-bold text-gray-700 mb-4">${f.name}</h3>
+                                    <div class="space-y-2 text-sm mb-6">
+                                        <div class="flex justify-between text-gray-400"><span>ยกมา:</span><span>${f.val.prev.toLocaleString()}</span></div>
+                                        <div class="flex justify-between text-green-600"><span>รับเพิ่ม:</span><span>+${f.val.rec.toLocaleString()}</span></div>
+                                        <div class="flex justify-between text-red-500 border-b pb-2"><span>จำหน่าย:</span><span>-${f.val.sold.toLocaleString()}</span></div>
+                                        <div class="flex justify-between items-center pt-2">
+                                            <span class="font-bold">คงเหลือ:</span>
+                                            <span class="text-2xl font-black text-blue-600">${remain.toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                    <div class="w-full bg-gray-100 rounded-full h-3 mb-4">
+                                        <div class="${barColor} h-3 rounded-full transition-all duration-1000" style="width: ${percent}%"></div>
+                                    </div>
+                                    <div class="${barColor} text-white text-center py-2 rounded-xl text-xs font-bold uppercase shadow-sm">
+                                        ${statusText}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
                 });
         }
 
