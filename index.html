@@ -5,48 +5,33 @@
     <title>Dashboard - ปตท.บ้านแฮด</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;700;900&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Kanit', sans-serif; }
-        .fuel-card { transition: all 0.3s ease; }
-        .fuel-card:hover { transform: translateY(-5px); }
-    </style>
+    <style>body { font-family: 'Kanit', sans-serif; }</style>
 </head>
-<body class="bg-slate-50 min-h-screen p-4 md:p-10">
-    <div class="max-w-5xl mx-auto">
-        <header class="text-center mb-10">
-            <div class="inline-block bg-blue-900 text-white px-6 py-2 rounded-2xl mb-4 shadow-lg font-bold text-xl">
-                PTT Station
-            </div>
-            <h1 class="text-4xl md:text-5xl font-black text-slate-800 tracking-tight">ปตท.บ้านแฮด</h1>
-            <div class="flex items-center justify-center mt-4 text-slate-500 bg-white inline-flex px-4 py-2 rounded-full shadow-sm mx-auto">
-                <span class="relative flex h-3 w-3 mr-3">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                </span>
-                <p id="time" class="text-sm font-medium">กำลังโหลดข้อมูลล่าสุด...</p>
-            </div>
+<body class="bg-slate-50 min-h-screen p-6">
+    <div class="max-w-4xl mx-auto">
+        <header class="text-center mb-12">
+            <h1 class="text-5xl font-black text-blue-900 mb-2">ปตท.บ้านแฮด</h1>
+            <div id="time" class="text-slate-500 italic text-sm bg-white inline-block px-4 py-1 rounded-full shadow-sm">กำลังโหลด...</div>
         </header>
 
-        <div id="displayArea" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div id="displayArea" class="grid grid-cols-1 md:grid-cols-2 gap-10">
             </div>
-
-        </div>
+    </div>
 
     <script>
-        // *** สำคัญ: นำ URL Firebase ของคุณมาวางตรงนี้ ***
-        const FIREBASE_URL = "https://ptt-ban-had-default-rtdb.asia-southeast1.firebasedatabase.app/fuel_report.json";
+        // *** ใช้ URL เดียวกับหน้า Admin ***
+        const FIREBASE_URL = "https://ptt-ban-had-default-rtdb.asia-southeast1.firebasedatabase.app/fuel_summary.json";
 
         function updateView() {
             fetch(FIREBASE_URL)
                 .then(res => res.json())
                 .then(data => {
                     if (!data) return;
-                    document.getElementById('time').innerText = "อัปเดตล่าสุด: " + data.lastUpdate;
+                    document.getElementById('time').innerText = "ข้อมูลล่าสุด: " + data.lastUpdate;
                     
                     const fuels = [
-                        { name: "แก๊สโซฮอล์ 95", val: data.g95, color: "orange" },
-                        { name: "แก๊สโซฮอล์ 91", val: data.g91, color: "green" },
-                        { name: "ดีเซล (Diesel)", val: data.d, color: "blue" }
+                        { name: "Diesel (ดีเซล)", val: data.diesel, color: "blue" },
+                        { name: "Gasoline (เบนซิน)", val: data.gasoline, color: "orange" }
                     ];
 
                     const display = document.getElementById('displayArea');
@@ -59,64 +44,38 @@
                         
                         let barColor = "bg-green-500";
                         let statusText = "พร้อมให้บริการ";
-                        let statusBg = "bg-green-100 text-green-700";
-
-                        if (remain <= 0) { 
-                            barColor = "bg-red-600"; 
-                            statusText = "น้ำมันหมด";
-                            statusBg = "bg-red-100 text-red-700";
-                        } else if (percent < 20) { 
-                            barColor = "bg-yellow-500"; 
-                            statusText = "น้ำมันใกล้หมด";
-                            statusBg = "bg-yellow-100 text-yellow-700";
-                        }
+                        if (remain <= 0) { barColor = "bg-red-600"; statusText = "น้ำมันหมด"; }
+                        else if (percent < 20) { barColor = "bg-yellow-500"; statusText = "น้ำมันใกล้หมด"; }
 
                         display.innerHTML += `
-                            <div class="fuel-card bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden">
-                                <div class="p-8">
-                                    <div class="flex justify-between items-start mb-6">
-                                        <h3 class="text-xl font-bold text-slate-700">${f.name}</h3>
-                                        <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase ${statusBg}">
-                                            ${statusText}
-                                        </span>
+                            <div class="bg-white rounded-[3rem] shadow-2xl border-t-[12px] border-${f.color}-600 p-8 transition-transform hover:scale-105">
+                                <h3 class="text-2xl font-black text-slate-700 mb-6 uppercase text-center">${f.name}</h3>
+                                
+                                <div class="space-y-4 mb-8">
+                                    <div class="flex justify-between text-slate-400 text-sm"><span>ยกยอดมา:</span><span>${f.val.prev.toLocaleString()} L</span></div>
+                                    <div class="flex justify-between text-emerald-500 font-bold"><span>รับเพิ่ม (+):</span><span>${f.val.rec.toLocaleString()} L</span></div>
+                                    <div class="flex justify-between text-rose-500 font-bold border-b pb-4"><span>จำหน่าย (-):</span><span>${f.val.sold.toLocaleString()} L</span></div>
+                                    
+                                    <div class="text-center pt-4">
+                                        <p class="text-slate-400 text-xs mb-1 uppercase tracking-widest">ปริมาณคงเหลือสุทธิ</p>
+                                        <p class="text-6xl font-black text-blue-700">${remain.toLocaleString()}</p>
+                                        <p class="text-slate-300 font-bold">LITERS</p>
                                     </div>
+                                </div>
 
-                                    <div class="space-y-3 text-sm mb-8">
-                                        <div class="flex justify-between text-slate-400">
-                                            <span>ยอดยกมา:</span>
-                                            <span class="font-medium">${f.val.prev.toLocaleString()}</span>
-                                        </div>
-                                        <div class="flex justify-between text-emerald-500">
-                                            <span>รับเพิ่มวันนี้:</span>
-                                            <span class="font-bold">+${f.val.rec.toLocaleString()}</span>
-                                        </div>
-                                        <div class="flex justify-between text-rose-500 border-b border-slate-50 pt-1 pb-3">
-                                            <span>จำหน่ายไป:</span>
-                                            <span class="font-bold">-${f.val.sold.toLocaleString()}</span>
-                                        </div>
-                                        <div class="flex flex-col pt-2">
-                                            <span class="text-slate-400 text-xs mb-1">ปริมาณคงเหลือสุทธิ</span>
-                                            <span class="text-4xl font-black text-blue-600 tracking-tight">
-                                                ${remain.toLocaleString()} <span class="text-lg text-slate-300 font-normal">L</span>
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div class="relative w-full bg-slate-100 rounded-full h-4 mb-2 overflow-hidden shadow-inner">
-                                        <div class="${barColor} h-full rounded-full transition-all duration-1000 shadow-md" 
-                                             style="width: ${percent}%"></div>
-                                    </div>
-                                    <p class="text-[10px] text-slate-300 text-right font-medium">${Math.round(percent)}% ของถัง</p>
+                                <div class="w-full bg-slate-100 rounded-full h-5 mb-4 overflow-hidden shadow-inner">
+                                    <div class="${barColor} h-full rounded-full transition-all duration-1000" style="width: ${percent}%"></div>
+                                </div>
+                                <div class="${barColor} text-white text-center py-3 rounded-2xl font-black uppercase tracking-tighter shadow-md">
+                                    ${statusText}
                                 </div>
                             </div>
                         `;
                     });
-                })
-                .catch(err => console.error("Error fetching data:", err));
+                });
         }
 
-        // อัปเดตทุก 5 วินาที
-        setInterval(updateView, 5000);
+        setInterval(updateView, 3000);
         updateView();
     </script>
 </body>
