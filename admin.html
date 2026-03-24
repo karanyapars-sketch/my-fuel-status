@@ -2,60 +2,54 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>Admin - บันทึกยอดน้ำมันรายประเภท</title>
+    <title>Admin - บันทึกยอดน้ำมัน (ดีเซล/เบนซิน)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;500&display=swap" rel="stylesheet">
     <style>body { font-family: 'Kanit', sans-serif; }</style>
 </head>
 <body class="bg-slate-900 p-4 text-slate-100">
-    <div class="max-w-2xl mx-auto bg-slate-800 p-6 rounded-3xl shadow-2xl border border-slate-700 mt-4">
-        <h2 class="text-2xl font-bold text-yellow-400 mb-6 text-center border-b border-slate-700 pb-4">ระบบจัดการ ปตท.บ้านแฮด</h2>
+    <div class="max-w-xl mx-auto bg-slate-800 p-6 rounded-3xl shadow-2xl border border-slate-700 mt-10">
+        <h2 class="text-2xl font-bold text-yellow-400 mb-6 text-center border-b border-slate-700 pb-4">แผงควบคุม ปตท.บ้านแฮด</h2>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div class="bg-slate-700 p-4 rounded-2xl border-t-4 border-orange-500">
-                <h3 class="font-bold text-orange-400 mb-3 text-center">แก๊สโซฮอล์ 95</h3>
-                <div class="space-y-2">
-                    <input type="number" id="g95_prev" placeholder="ยอดยกมา" class="w-full p-2 rounded bg-slate-800 text-sm">
-                    <input type="number" id="g95_rec" placeholder="รับเพิ่ม (+)" class="w-full p-2 rounded bg-slate-800 text-sm text-green-400">
-                    <input type="number" id="g95_sold" placeholder="จำหน่าย (-)" class="w-full p-2 rounded bg-slate-800 text-sm text-red-400">
+        <div class="space-y-6">
+            <div class="bg-slate-700 p-5 rounded-2xl border-l-8 border-blue-500">
+                <h3 class="font-bold text-blue-400 mb-4 text-lg text-center uppercase tracking-wider">Diesel (ดีเซล)</h3>
+                <div class="grid grid-cols-1 gap-3">
+                    <input type="number" id="d_prev" placeholder="ยอดยกมา (ลิตร)" class="w-full p-3 rounded-xl bg-slate-800 border-none">
+                    <div class="grid grid-cols-2 gap-3">
+                        <input type="number" id="d_rec" placeholder="รับเพิ่ม (+)" class="p-3 rounded-xl bg-slate-800 border-none text-green-400">
+                        <input type="number" id="d_sold" placeholder="จำหน่าย (-)" class="p-3 rounded-xl bg-slate-800 border-none text-red-400">
+                    </div>
                 </div>
             </div>
 
-            <div class="bg-slate-700 p-4 rounded-2xl border-t-4 border-green-500">
-                <h3 class="font-bold text-green-400 mb-3 text-center">แก๊สโซฮอล์ 91</h3>
-                <div class="space-y-2">
-                    <input type="number" id="g91_prev" placeholder="ยอดยกมา" class="w-full p-2 rounded bg-slate-800 text-sm">
-                    <input type="number" id="g91_rec" placeholder="รับเพิ่ม (+)" class="w-full p-2 rounded bg-slate-800 text-sm text-green-400">
-                    <input type="number" id="g91_sold" placeholder="จำหน่าย (-)" class="w-full p-2 rounded bg-slate-800 text-sm text-red-400">
-                </div>
-            </div>
-
-            <div class="bg-slate-700 p-4 rounded-2xl border-t-4 border-blue-500">
-                <h3 class="font-bold text-blue-400 mb-3 text-center">ดีเซล</h3>
-                <div class="space-y-2">
-                    <input type="number" id="d_prev" placeholder="ยอดยกมา" class="w-full p-2 rounded bg-slate-800 text-sm">
-                    <input type="number" id="d_rec" placeholder="รับเพิ่ม (+)" class="w-full p-2 rounded bg-slate-800 text-sm text-green-400">
-                    <input type="number" id="d_sold" placeholder="จำหน่าย (-)" class="w-full p-2 rounded bg-slate-800 text-sm text-red-400">
+            <div class="bg-slate-700 p-5 rounded-2xl border-l-8 border-orange-500">
+                <h3 class="font-bold text-orange-400 mb-4 text-lg text-center uppercase tracking-wider">Gasoline (เบนซิน)</h3>
+                <div class="grid grid-cols-1 gap-3">
+                    <input type="number" id="g_prev" placeholder="ยอดยกมา (ลิตร)" class="w-full p-3 rounded-xl bg-slate-800 border-none">
+                    <div class="grid grid-cols-2 gap-3">
+                        <input type="number" id="g_rec" placeholder="รับเพิ่ม (+)" class="p-3 rounded-xl bg-slate-800 border-none text-green-400">
+                        <input type="number" id="g_sold" placeholder="จำหน่าย (-)" class="p-3 rounded-xl bg-slate-800 border-none text-red-400">
+                    </div>
                 </div>
             </div>
         </div>
 
-        <button onclick="saveData()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-black py-4 rounded-2xl shadow-lg transition-all text-xl">
+        <button onclick="saveData()" class="w-full mt-8 bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-black py-4 rounded-2xl shadow-lg transition-all text-xl">
             อัปเดตข้อมูลออนไลน์
         </button>
-        <p id="msg" class="text-center mt-4 text-green-400 font-bold opacity-0 transition-opacity">✅ บันทึกสำเร็จ ข้อมูลอัปเดตแล้ว!</p>
+        <p id="msg" class="text-center mt-4 text-green-400 font-bold opacity-0 transition-opacity">✅ บันทึกสำเร็จ ข้อมูลออนไลน์แล้ว!</p>
     </div>
 
     <script>
-        // เปลี่ยน URL เป็น Firebase ของคุณ (ต้องมี /fuel_report.json ต่อท้าย)
-        const FIREBASE_URL = "https://ptt-ban-had-default-rtdb.asia-southeast1.firebasedatabase.app/fuel_report.json";
+        // *** วาง URL Firebase ของคุณที่นี่ ***
+        const FIREBASE_URL = "https://ptt-ban-had-default-rtdb.asia-southeast1.firebasedatabase.app/fuel_summary.json";
 
         function saveData() {
             const data = {
                 lastUpdate: new Date().toLocaleString('th-TH'),
-                g95: { prev: Number(document.getElementById('g95_prev').value), rec: Number(document.getElementById('g95_rec').value), sold: Number(document.getElementById('g95_sold').value) },
-                g91: { prev: Number(document.getElementById('g91_prev').value), rec: Number(document.getElementById('g91_rec').value), sold: Number(document.getElementById('g91_sold').value) },
-                d: { prev: Number(document.getElementById('d_prev').value), rec: Number(document.getElementById('d_rec').value), sold: Number(document.getElementById('d_sold').value) }
+                diesel: { prev: Number(document.getElementById('d_prev').value), rec: Number(document.getElementById('d_rec').value), sold: Number(document.getElementById('d_sold').value) },
+                gasoline: { prev: Number(document.getElementById('g_prev').value), rec: Number(document.getElementById('g_rec').value), sold: Number(document.getElementById('g_sold').value) }
             };
 
             fetch(FIREBASE_URL, { method: 'PUT', body: JSON.stringify(data) })
